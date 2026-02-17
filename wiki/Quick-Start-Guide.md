@@ -311,6 +311,8 @@ npm run db:push                # Push schema to database
 npm run db:seed                # Seed database (if available)
 
 # Testing
+npx tsx scripts/test-all.ts    # Run production test suite (156 assertions)
+npx tsc --noEmit               # TypeScript type checking
 npm run test:email <email>     # Test email configuration
 
 # Prisma Studio (Database GUI)

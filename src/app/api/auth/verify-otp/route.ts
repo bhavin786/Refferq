@@ -3,7 +3,7 @@ import { otpService } from '@/lib/otp';
 import { SignJWT } from 'jose';
 
 const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'your-secret-key'
+  process.env.JWT_SECRET || 'fallback-secret-key'
 );
 
 export async function POST(request: NextRequest) {

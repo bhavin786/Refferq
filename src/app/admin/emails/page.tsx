@@ -48,6 +48,9 @@ import {
   Trash2,
   MailCheck,
   MailX,
+  Code,
+  Variable,
+  TestTube,
 } from 'lucide-react';
 
 interface EmailTemplate {
@@ -62,6 +65,17 @@ interface EmailTemplate {
   lastSent: string | null;
   createdAt: string;
 }
+
+const AVAILABLE_VARIABLES = [
+  { name: 'name', desc: 'Recipient name' },
+  { name: 'email', desc: 'Recipient email' },
+  { name: 'code', desc: 'OTP or referral code' },
+  { name: 'amount', desc: 'Payout amount' },
+  { name: 'referralCode', desc: 'Referral code' },
+  { name: 'companyName', desc: 'Company name' },
+  { name: 'dashboardUrl', desc: 'Dashboard link' },
+  { name: 'reason', desc: 'Approval/rejection reason' },
+];
 
 const typeColors: Record<string, 'default' | 'secondary' | 'outline' | 'destructive'> = {
   WELCOME: 'default',
@@ -78,6 +92,13 @@ export default function EmailsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<EmailTemplate | null>(null);
   const [saving, setSaving] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewTemplate, setPreviewTemplate] = useState<EmailTemplate | null>(null);
+  const [testEmailOpen, setTestEmailOpen] = useState(false);
+  const [testEmail, setTestEmail] = useState('');
+  const [testTemplateId, setTestTemplateId] = useState('');
+  const [sendingTest, setSendingTest] = useState(false);
+  const [showSourceView, setShowSourceView] = useState(false);
   const [form, setForm] = useState({ type: '', name: '', subject: '', body: '', variables: '' });
 
   useEffect(() => {
@@ -168,7 +189,56 @@ export default function EmailsPage() {
   const openCreate = () => {
     setEditing(null);
     setForm({ type: '', name: '', subject: '', body: '', variables: '' });
+    setShowSourceView(false);
     setDialogOpen(true);
+  };
+
+  const insertVariable = (varName: string) => {
+    const tag = `{{${varName}}}`;
+    setForm(prev => ({ ...prev, body: prev.body + tag }));
+    // Also add to variables list if not present
+    const vars = prev_variables_from(form.variables);
+    if (!vars.includes(varName)) {
+      setForm(prev => ({ ...prev, variables: vars.concat(varName).join(', ') }));
+    }
+  };
+
+  function prev_variables_from(v: string) {
+    return v.split(',').map(s => s.trim()).filter(Boolean);
+  }
+
+  const openPreview = (t: EmailTemplate) => {
+    setPreviewTemplate(t);
+    setPreviewOpen(true);
+  };
+
+  const openTestSend = (id: string) => {
+    setTestTemplateId(id);
+    setTestEmail('');
+    setTestEmailOpen(true);
+  };
+
+  const handleTestSend = async () => {
+    if (!testEmail || !testTemplateId) return;
+    setSendingTest(true);
+    try {
+      const res = await fetch('/api/admin/emails/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ templateId: testTemplateId, email: testEmail }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('Test email sent successfully!');
+        setTestEmailOpen(false);
+      } else {
+        alert(data.error || 'Failed to send test email');
+      }
+    } catch (error) {
+      alert('Failed to send test email');
+    } finally {
+      setSendingTest(false);
+    }
   };
 
   const stats = {
@@ -246,14 +316,44 @@ export default function EmailsPage() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="body">Body</Label>
-                <Textarea
-                  id="body"
-                  value={form.body}
-                  onChange={(e) => setForm({ ...form, body: e.target.value })}
-                  placeholder="Email body (HTML supported)"
-                  rows={6}
-                />
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="body">Body</Label>
+                  <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => setShowSourceView(!showSourceView)}>
+                      {showSourceView ? <Eye className="h-3 w-3" /> : <Code className="h-3 w-3" />}
+                      {showSourceView ? 'Preview' : 'Source'}
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-1 mb-1">
+                  <span className="text-xs text-muted-foreground mr-1 py-1">Insert:</span>
+                  {AVAILABLE_VARIABLES.map(v => (
+                    <Button
+                      key={v.name}
+                      variant="outline"
+                      size="sm"
+                      className="h-6 text-[10px] px-2 font-mono"
+                      onClick={() => insertVariable(v.name)}
+                      title={v.desc}
+                    >
+                      {'{{' + v.name + '}}'}
+                    </Button>
+                  ))}
+                </div>
+                {showSourceView ? (
+                  <div className="border rounded-md p-3 text-sm max-h-48 overflow-auto bg-muted/50">
+                    <div dangerouslySetInnerHTML={{ __html: form.body || '<p class="text-muted-foreground">No content to preview</p>' }} />
+                  </div>
+                ) : (
+                  <Textarea
+                    id="body"
+                    value={form.body}
+                    onChange={(e) => setForm({ ...form, body: e.target.value })}
+                    placeholder="Email body (HTML supported). Use {{variable}} for dynamic content."
+                    rows={8}
+                    className="font-mono text-sm"
+                  />
+                )}
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="variables">Variables (comma-separated)</Label>
@@ -354,6 +454,12 @@ export default function EmailsPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
+                        <Button variant="ghost" size="icon" title="Preview" onClick={() => openPreview(t)}>
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" title="Test Send" onClick={() => openTestSend(t.id)}>
+                          <TestTube className="h-4 w-4" />
+                        </Button>
                         <Button variant="ghost" size="icon" onClick={() => openEdit(t)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
@@ -369,6 +475,60 @@ export default function EmailsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Preview Dialog */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Email Preview: {previewTemplate?.name}</DialogTitle>
+            <DialogDescription>Subject: {previewTemplate?.subject}</DialogDescription>
+          </DialogHeader>
+          {previewTemplate && (
+            <div className="space-y-4">
+              <div className="flex flex-wrap gap-1">
+                <span className="text-xs text-muted-foreground">Variables:</span>
+                {previewTemplate.variables.map(v => (
+                  <Badge key={v} variant="outline" className="text-xs font-mono">{'{{' + v + '}}'}</Badge>
+                ))}
+              </div>
+              <div className="border rounded-lg p-4 bg-white">
+                <div dangerouslySetInnerHTML={{ __html: previewTemplate.body }} />
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Test Send Dialog */}
+      <Dialog open={testEmailOpen} onOpenChange={setTestEmailOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Send Test Email</DialogTitle>
+            <DialogDescription>Send a test email to verify the template</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label>Recipient Email</Label>
+              <Input
+                type="email"
+                value={testEmail}
+                onChange={e => setTestEmail(e.target.value)}
+                placeholder="test@example.com"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Variables will be replaced with sample data for testing.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTestEmailOpen(false)}>Cancel</Button>
+            <Button onClick={handleTestSend} disabled={sendingTest || !testEmail}>
+              <Send className="mr-2 h-4 w-4" />
+              {sendingTest ? 'Sending...' : 'Send Test'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -747,6 +747,23 @@ class EmailService {
       return { success: false, message: 'Failed to send payout completed notification' };
     }
   }
+
+  async sendCustomEmail(to: string, subject: string, html: string): Promise<{ success: boolean; message: string }> {
+    try {
+      const result = await resend.emails.send({
+        from: this.defaultFrom,
+        to,
+        subject,
+        html,
+      });
+
+      console.log('Custom email sent:', result);
+      return { success: true, message: 'Email sent successfully' };
+    } catch (error) {
+      console.error('Failed to send custom email:', error);
+      return { success: false, message: 'Failed to send email' };
+    }
+  }
 }
 
 export const emailService = new EmailService();

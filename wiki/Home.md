@@ -157,19 +157,22 @@ Refferq is perfect for:
 
 ## 📊 Current Status
 
-**Version:** 1.2.0  
+**Version:** 1.3.0  
 **Status:** Production Ready ✅  
 **Last Updated:** February 2026  
 **License:** MIT  
 
-### Recent Updates (v1.2.0)
-- ✅ Complete UI redesign with shadcn/ui component library (50+ components)
-- ✅ New login page with OTP-based 2-step flow
-- ✅ New register page with 3-step affiliate onboarding
-- ✅ Admin dashboard redesigned with stat cards, progress bars, quick actions
-- ✅ 61 TypeScript errors resolved — zero compilation errors
-- ✅ Prisma client regeneration for full type safety
-- ✅ Stale backup files cleaned up
+### Recent Updates (v1.3.0)
+- ✅ 3 CRITICAL security fixes: login JWT, password hashing, referral tracking
+- ✅ PrismaClient singleton migration across 36 files (no more connection leaks)
+- ✅ 7 new admin pages: invoices, team, programs, coupons, resources, emails, program-settings
+- ✅ 5 affiliate sub-pages: referrals, payouts, resources, reports, settings
+- ✅ 10+ new API routes with full CRUD
+- ✅ 5 new database models (28 total)
+- ✅ 156-assertion production test suite — all passing
+- ✅ 6 dead code files removed
+- ✅ Commission rates now use partner group configuration
+- ✅ Zero TypeScript errors
 
 ### Upcoming Features
 See our **[Roadmap](Roadmap)** for planned features and timeline.
@@ -194,12 +197,12 @@ Please read our **[Code of Conduct](Code-of-Conduct)** before participating in t
 
 ## 📈 Project Stats
 
-- **🎯 31 API Endpoints** - Comprehensive REST API
-- **📊 6 Email Templates** - Professional email notifications
-- **🔐 JWT Authentication** - Secure token-based auth with OTP
-- **💾 PostgreSQL Database** - Reliable and scalable data storage
-- **📱 Responsive Design** - Mobile-friendly interface
-- **🌍 Production Ready** - Deploy to Vercel, AWS, or your own servers
+- **🎯 48+ API Endpoints** — Comprehensive REST API
+- **📊 28 Database Models** — Full-featured data layer
+- **🔐 JWT + OTP Authentication** — Secure token-based auth
+- **💾 PostgreSQL Database** — Reliable and scalable data storage
+- **📱 Responsive Design** — Mobile-friendly with shadcn/ui
+- **🌍 Production Ready** — 156 tests passing, zero TS errors
 
 ---
 

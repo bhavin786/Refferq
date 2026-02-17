@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { resend } from './email';
-
-const prisma = new PrismaClient();
 
 export class OTPService {
   // Generate a 6-digit OTP

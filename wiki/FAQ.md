@@ -509,5 +509,5 @@ No technical limit. Database and storage are the only constraints.
 </p>
 
 <p align="center">
-  Last Updated: October 10, 2025
+  Last Updated: February 17, 2026
 </p>

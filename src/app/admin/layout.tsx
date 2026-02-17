@@ -43,6 +43,11 @@ import {
   Bell,
   KeyRound,
   Activity,
+  Ticket,
+  FolderOpen,
+  FileText,
+  UsersRound,
+  Layers,
 } from 'lucide-react';
 
 const mainNavItems = [
@@ -50,15 +55,23 @@ const mainNavItems = [
   { title: 'Partners', url: '/admin/partners', icon: Users },
   { title: 'Customers', url: '/admin/customers', icon: UserCheck },
   { title: 'Payouts', url: '/admin/payouts', icon: Wallet },
+  { title: 'Invoices', url: '/admin/invoices', icon: FileText },
   { title: 'Emails', url: '/admin/emails', icon: Mail },
+];
+
+const marketingNavItems = [
+  { title: 'Coupons', url: '/admin/coupons', icon: Ticket },
+  { title: 'Resources', url: '/admin/resources', icon: FolderOpen },
+  { title: 'Programs', url: '/admin/programs', icon: Layers, badge: 'NEW' },
 ];
 
 const configNavItems = [
   { title: 'Program Settings', url: '/admin/program-settings', icon: Sliders },
+  { title: 'Team Members', url: '/admin/team', icon: UsersRound },
   { title: 'Settings', url: '/admin/settings', icon: Settings },
   { title: 'Reports', url: '/admin/reports', icon: BarChart3 },
   { title: 'API Keys', url: '/admin/api-keys', icon: KeyRound },
-  { title: 'API Analytics', url: '/admin/api-analytics', icon: Activity, badge: 'NEW' },
+  { title: 'API Analytics', url: '/admin/api-analytics', icon: Activity },
 ];
 
 function AdminSidebar() {
@@ -111,10 +124,10 @@ function AdminSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Configure</SidebarGroupLabel>
+          <SidebarGroupLabel>Marketing</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {configNavItems.map((item) => (
+              {marketingNavItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     isActive={isActive(item.url)}
@@ -128,6 +141,26 @@ function AdminSidebar() {
                         {item.badge}
                       </span>
                     )}
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Configure</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {configNavItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    isActive={isActive(item.url)}
+                    onClick={() => router.push(item.url)}
+                    tooltip={item.title}
+                  >
+                    <item.icon className="h-4 w-4" />
+                    <span>{item.title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

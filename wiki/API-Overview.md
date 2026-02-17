@@ -30,7 +30,7 @@ https://yourdomain.com/api  # Production
 
 ### API Version
 
-Current version: **v1.2.0**
+Current version: **v1.3.0**
 
 ---
 
@@ -112,9 +112,10 @@ Tokens expire after **24 hours**. You'll need to re-authenticate via OTP after e
 
 | Category | Endpoints | Description |
 |----------|-----------|-------------|
-| **Auth** | 7 | Authentication and user management |
-| **Admin** | 18 | Admin operations |
-| **Affiliate** | 6 | Affiliate operations |
+| **Auth** | 6 | Authentication and user management |
+| **Admin** | 34+ | Admin operations |
+| **Affiliate** | 8 | Affiliate operations |
+| **Tracking** | 3 | Referral & conversion tracking |
 | **Webhook** | 1 | External integrations |
 | **Testing** | 1 | Email testing |
 
@@ -159,17 +160,49 @@ Tokens expire after **24 hours**. You'll need to re-authenticate via OTP after e
 - `PUT /api/admin/settings/integration` - Update integrations
 
 #### Admin - Email
+- `GET/POST/PUT/DELETE /api/admin/emails` - Email template management
 - `POST /api/admin/emails/test` - Test email configuration
 
+#### Admin - Reports
+- `GET /api/admin/reports` - Generate reports
+- `GET /api/admin/reports/cohort` - Cohort analysis
+- `POST /api/admin/reports/email` - Email report delivery
+- `GET/POST/PUT/DELETE /api/admin/scheduled-reports` - Scheduled reports
+- `GET/POST/PUT/DELETE /api/admin/saved-reports` - Saved reports
+
+#### Admin - Invoices, Team & Programs
+- `GET/POST/DELETE /api/admin/invoices` - Invoice management
+- `GET/POST/PUT/DELETE /api/admin/team` - Team member management
+- `GET/POST/PUT/DELETE /api/admin/programs` - Program management
+- `GET/POST/PUT/DELETE /api/admin/coupons` - Coupon management
+- `GET/POST/DELETE /api/admin/resources` - Resource management
+
+#### Admin - Integration & API
+- `GET/PUT /api/admin/integration` - Integration settings
+- `POST /api/admin/integration/generate-key` - Generate integration key
+- `GET/POST/PUT/DELETE /api/admin/api-keys` - API key management
+- `GET /api/admin/api-usage` - API usage analytics
+- `GET/POST/PUT/DELETE /api/admin/webhooks` - Webhook management
+
+#### Admin - Advanced
+- `POST /api/admin/refunds` - Refund protection with commission clawback
+- `POST /api/admin/payouts/auto` - Automated payout processing
+
 #### Affiliate
-- `GET /api/affiliate/referrals` - List own referrals
-- `POST /api/affiliate/referrals` - Submit referral
+- `GET/POST /api/affiliate/referrals` - Submit and view referrals
 - `GET /api/affiliate/payouts` - View payout history
-- `GET /api/affiliate/profile` - Get profile
-- `PUT /api/affiliate/profile` - Update profile
+- `GET/PUT /api/affiliate/profile` - Manage profile
+- `GET/PUT /api/affiliate/branding` - Portal branding
+- `POST /api/affiliate/generate-code` - Regenerate referral code
+- `GET /api/affiliate/resources` - Access marketing materials
+
+#### Tracking
+- `GET /r/[code]` - Referral redirect with attribution
+- `POST /api/track/referral` - Manual referral tracking
+- `POST /api/track/conversion` - Conversion tracking
 
 #### Webhook
-- `POST /api/webhook/conversion` - Track conversion
+- `POST /api/webhook/conversion` - External conversion tracking
 
 ---
 
@@ -274,13 +307,13 @@ GET /api/admin/affiliates?status=ACTIVE&page=1&limit=10
 
 ## Rate Limiting
 
-### Current Limits
+### Current Limits (v1.2.0+)
 
-**Version 1.0.0:** No rate limiting
+API rate limiting is enforced via a sliding-window algorithm backed by the database:
 
-**Planned (v1.1.0):** 
-- 100 requests/minute per IP
-- 1000 requests/hour per user
+- **Default:** 100 requests/minute per IP
+- **API Key:** Custom rate limits configurable per key
+- **Response Headers:** `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`
 
 ### Best Practices
 
@@ -542,11 +575,20 @@ See [Webhook API](Webhook-API) for details.
 
 ## API Changelog
 
+### v1.3.0 (February 2026)
+- 10+ new admin API routes (invoices, team, programs, coupons, resources, refunds, auto-payouts)
+- 3 new affiliate routes (branding, generate-code, resources)
+- Referral tracking route `/r/[code]` rewritten with Prisma (was broken)
+- Login API now creates JWT token and sets cookie
+- Commission approval uses partner group rates
+- Total: 48+ API routes
+
 ### v1.2.0 (February 2026)
-- OTP-based authentication (passwordless)
-- JWT stored in HTTP-only cookies (`auth-token`)
-- Token expiry: 24 hours
-- All admin/affiliate endpoints unchanged
+- Scheduled/saved reports APIs
+- API key management (create, revoke, scope-based)
+- API usage analytics endpoint
+- Cohort analysis and email report delivery
+- Rate limiting with sliding window
 
 ### v1.1.0 (December 2025)
 - Webhooks API (CRUD + test + trigger)

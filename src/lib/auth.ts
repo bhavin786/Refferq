@@ -1,8 +1,7 @@
 // Authentication and session management for the affiliate platform
-import { type User, PrismaClient, Role, UserStatus } from '@prisma/client';
+import { type User, Role, UserStatus } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import * as bcrypt from 'bcryptjs';
-
-const prisma = new PrismaClient();
 
 export interface AuthSession {
   user: User;

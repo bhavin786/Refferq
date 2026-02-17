@@ -89,19 +89,22 @@ Step-by-step setup guide covering:
 - Useful commands
 - Next steps
 
-### Roadmap.md (2,800+ words)
+### Roadmap.md (3,200+ words)
 Comprehensive roadmap including:
-- v1.0.0 - v1.2.0 released features
-- v1.3.0 - v2.0.0 planned features
+- v1.0.0 - v1.3.0 released features
+- v1.4.0 - v2.0.0 planned features
 - Priority matrix
 - Release schedule
 - Community input process
 - Long-term goals
 
-### Changelog.md (2,100+ words)
+### Changelog.md (3,500+ words)
 Detailed version history with:
+- v1.3.0 production hardening (3 critical security fixes, 36-file migration)
+- v1.2.0 shadcn/ui redesign & API enhancements
+- v1.1.0 UI modernization & webhooks
 - v1.0.0 initial release
-- Feature list (31 API endpoints)
+- 48+ API endpoints
 - Technical stack
 - Documentation
 - Migration guides
@@ -119,15 +122,15 @@ Detailed version history with:
 - Integrations
 - Security & privacy
 
-### API-Overview.md (2,000+ words)
+### API-Overview.md (2,500+ words)
 Complete API reference covering:
-- Authentication (JWT)
-- 31 API endpoints
+- Authentication (JWT + OTP)
+- 48+ API endpoints
 - Request/response format
 - Error handling
 - Examples
 - Pagination & filtering
-- Rate limiting (planned)
+- Rate limiting (sliding window)
 
 ### Contributing.md (2,500+ words)
 Contribution guidelines including:
@@ -145,9 +148,9 @@ Contribution guidelines including:
 ## 📊 Wiki Statistics
 
 - **Total Pages:** 7
-- **Total Words:** 18,000+
-- **Total Lines:** 2,500+
-- **Coverage:** Getting started, API, roadmap, FAQ, contributing
+- **Total Words:** 25,000+
+- **Total Lines:** 3,800+
+- **Coverage:** Getting started, API, roadmap, changelog, FAQ, contributing
 
 ---
 
@@ -388,5 +391,5 @@ Wiki content is licensed under [MIT License](../LICENSE), same as the project.
 </p>
 
 <p align="center">
-  Last Updated: October 10, 2025
+  Last Updated: February 17, 2026
 </p>

@@ -158,9 +158,17 @@ npm run build
 # Run linter
 npm run lint
 
+# Run comprehensive production test suite (156 assertions)
+npx tsx scripts/test-all.ts
+
+# TypeScript type checking
+npx tsc --noEmit
+
 # Test email (if applicable)
 npm run test:email test@example.com
 ```
+
+> **Note:** The production test suite (`scripts/test-all.ts`) validates all 28 database models, the full affiliate pipeline, data integrity, and file structure. All test data is created and cleaned up automatically.
 
 ---
 

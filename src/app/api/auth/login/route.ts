@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import * as bcrypt from 'bcryptjs';
+import { SignJWT } from 'jose';
+
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || 'fallback-secret-key'
+);
 
 export async function POST(request: NextRequest) {
   try {
@@ -65,14 +70,37 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Generate JWT token
+    const token = await new SignJWT({
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      name: user.name
+    })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt()
+      .setExpirationTime('24h')
+      .sign(JWT_SECRET);
+
     // Return user data (password excluded)
     const { password: _, ...userData } = user;
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       message: 'Login successful',
       user: userData,
     });
+
+    // Set auth cookie
+    response.cookies.set('auth-token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 86400, // 24 hours
+      path: '/'
+    });
+
+    return response;
   } catch (error) {
     console.error('Login API error:', error);
     return NextResponse.json(

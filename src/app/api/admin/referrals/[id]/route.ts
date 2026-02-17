@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'fallback-secret-key'
@@ -49,7 +47,9 @@ export async function PUT(
     const referral = await prisma.referral.findUnique({
       where: { id: params.id },
       include: {
-        affiliate: true
+        affiliate: {
+          include: { partnerGroup: true }
+        }
       }
     });
 
@@ -59,6 +59,10 @@ export async function PUT(
         { status: 404 }
       );
     }
+
+    // Get estimated value from referral metadata
+    const metadata = referral.metadata as Record<string, any> || {};
+    const estimatedValueCents = Number(metadata?.estimated_value) * 100 || 10000;
 
     const updatedReferral = await prisma.referral.update({
       where: { id: params.id },
@@ -72,20 +76,23 @@ export async function PUT(
 
     // If approved, create conversion and commission
     if (action === 'approve') {
+      // Get commission rate from partner group or use default 10%
+      const commissionRate = referral.affiliate.partnerGroup?.commissionRate
+        ? referral.affiliate.partnerGroup.commissionRate / 100
+        : 0.1;
+
       const conversion = await prisma.conversion.create({
         data: {
           affiliateId: referral.affiliateId,
           referralId: referral.id,
           eventType: 'PURCHASE',
-          amountCents: 10000, // Default $100 conversion value
+          amountCents: estimatedValueCents,
           status: 'PENDING'
         }
       });
 
-      // Create commission (10% of conversion value)
-      const commissionRate = 0.1;
-      const commissionAmount = Math.round(10000 * commissionRate);
-      
+      const commissionAmount = Math.round(estimatedValueCents * commissionRate);
+
       await prisma.commission.create({
         data: {
           affiliateId: referral.affiliateId,
@@ -148,7 +155,7 @@ export async function PATCH(
     // Check if referral exists
     const referral = await prisma.referral.findUnique({
       where: { id: params.id },
-      include: { affiliate: true }
+      include: { affiliate: { include: { partnerGroup: true } } }
     });
 
     if (!referral) {
@@ -172,18 +179,23 @@ export async function PATCH(
 
       // If approved, create conversion and commission
       if (action === 'approve') {
+        const refMetadata = referral.metadata as Record<string, any> || {};
+        const estValueCents = Number(refMetadata?.estimated_value) * 100 || 10000;
+        const commissionRate = referral.affiliate.partnerGroup?.commissionRate
+          ? referral.affiliate.partnerGroup.commissionRate / 100
+          : 0.1;
+
         const conversion = await prisma.conversion.create({
           data: {
             affiliateId: referral.affiliateId,
             referralId: referral.id,
             eventType: 'PURCHASE',
-            amountCents: 10000,
+            amountCents: estValueCents,
             status: 'PENDING'
           }
         });
 
-        const commissionRate = 0.1;
-        const commissionAmount = Math.round(10000 * commissionRate);
+        const commissionAmount = Math.round(estValueCents * commissionRate);
         
         await prisma.commission.create({
           data: {

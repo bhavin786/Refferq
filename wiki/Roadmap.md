@@ -129,22 +129,74 @@ To become the **most comprehensive, developer-friendly, and feature-rich open-so
 
 ---
 
-## 🎨 Version 1.3.0 (Q2 2026)
+## ✅ Version 1.3.0 (Q1 2026)
 
-**Target:** April 2026  
-**Focus:** Customization & White-Label
+**Status:** Released (February 17, 2026)  
+**Focus:** Production Hardening, Admin Expansion & Affiliate Portal
 
-> **Note:** Advanced Reporting and API Enhancements originally planned here were completed early and shipped in v1.2.0.
+### Security Fixes (CRITICAL)
+- [x] Login JWT cookie — Login API now creates and sets JWT token (was missing entirely)
+- [x] Password hashing — Admin affiliate creation now uses bcrypt (was storing plain text)
+- [x] Referral tracking — `/r/[code]` rewritten from localStorage mock to Prisma (was completely broken)
+- [x] JWT secret standardization — All 20+ routes unified to single fallback secret
+
+### Bug Fixes (HIGH)
+- [x] Commission rates now use partner group rates + referral metadata (was hardcoded 10%/₹100)
+- [x] 2 critical DELETE API handlers fixed (wrong model references)
+- [x] PrismaClient singleton migration across 36 files (eliminated connection leaks)
+- [x] Invoice delete functionality added to admin UI
+
+### New Admin Pages (7 pages)
+- [x] `/admin/invoices` — Invoice management
+- [x] `/admin/team` — Team member management
+- [x] `/admin/programs` — Program management
+- [x] `/admin/coupons` — Coupon/discount codes
+- [x] `/admin/resources` — Marketing resource library
+- [x] `/admin/emails` — Email template editor
+- [x] `/admin/program-settings` — Referral tracking widget
+
+### Affiliate Sub-Pages (5 pages)
+- [x] `/affiliate/referrals` — Referral submissions and tracking
+- [x] `/affiliate/payouts` — Payout history
+- [x] `/affiliate/resources` — Marketing materials
+- [x] `/affiliate/reports` — Performance reports
+- [x] `/affiliate/settings` — Profile and payment settings
+
+### New API Endpoints (10+)
+- [x] Invoices CRUD, Team CRUD, Programs CRUD, Coupons CRUD, Resources CRUD
+- [x] Auto-payouts, Refund protection, Affiliate branding, Code regeneration
+
+### Database (5 new models)
+- [x] Coupon, Resource, Invoice, Program, TeamMember
+
+### Production Test Suite
+- [x] Comprehensive test script (`scripts/test-all.ts`) — 156 assertions, 15 sections
+- [x] Full pipeline test: referral → click → conversion → commission → payout → transaction
+- [x] Data integrity checks: orphans, passwords, duplicates, negative balances
+- [x] File structure verification: 26 pages + 48 API routes
+
+### Dead Code Removed (6 files)
+- [x] Removed `database.ts`, `services/api.ts`, `AuthContext.tsx`, `Navigation.tsx`, `lib/api.ts`, root `route.ts`
+
+### White-Label (Partial — carried to v1.4.0)
+- [x] Custom email templates editor
+- [x] Branded affiliate portal with custom branding API
+- [ ] Custom domain support (moved to v1.4.0)
+- [ ] Multi-language support / i18n (moved to v1.4.0)
+
+---
+
+## 🎨 Version 1.4.0 (Q2 2026)
+
+**Target:** May 2026  
+**Focus:** Customization, White-Label & Theme System
 
 ### Planned Features
 
 #### White-Label Capabilities
-- [ ] Custom branding (logo, colors, fonts)
 - [ ] Custom domain support
 - [ ] Multi-language support (i18n)
-- [ ] Custom email templates editor
 - [ ] Custom CSS/styling
-- [ ] Branded affiliate portal
 - [ ] Custom terms & conditions
 
 #### Theme System
@@ -155,7 +207,6 @@ To become the **most comprehensive, developer-friendly, and feature-rich open-so
 - [ ] Mobile app themes
 
 #### Customization Tools
-- [ ] Visual email editor
 - [ ] Landing page builder
 - [ ] Custom field builder
 - [ ] Form customization
@@ -163,7 +214,7 @@ To become the **most comprehensive, developer-friendly, and feature-rich open-so
 
 ---
 
-## 💰 Version 1.4.0 (Q3 2026)
+## 💰 Version 1.5.0 (Q3 2026)
 
 **Target:** July 2026  
 **Focus:** Advanced Commission System
@@ -198,7 +249,7 @@ To become the **most comprehensive, developer-friendly, and feature-rich open-so
 
 ---
 
-## 🔗 Version 1.5.0 (Q4 2026)
+## 🔗 Version 1.6.0 (Q4 2026)
 
 **Target:** October 2026  
 **Focus:** Integrations & Ecosystem
@@ -241,7 +292,7 @@ To become the **most comprehensive, developer-friendly, and feature-rich open-so
 
 ---
 
-## 🚀 Version 1.6.0 (Q1 2027)
+## 🚀 Version 1.7.0 (Q1 2027)
 
 **Target:** January 2027  
 **Focus:** Advanced Features & Scale
@@ -365,23 +416,23 @@ These features are being considered but not yet scheduled:
 ## 📊 Priority Matrix
 
 ### High Priority (Next 3 Months)
-1. Enhanced analytics dashboard
-2. Webhook system
-3. Multi-language support
-4. Advanced commission rules
-5. Payout automation
+1. White-label customization & themes
+2. Multi-language support (i18n)
+3. Dark mode
+4. Advanced commission rules (tiered, recurring)
+5. Custom domain support
 
 ### Medium Priority (3-6 Months)
-1. White-label customization
-2. E-commerce integrations
-3. Mobile app
-4. Fraud prevention
-5. Performance optimization
+1. E-commerce integrations (Shopify, WooCommerce)
+2. Mobile app (React Native)
+3. Fraud prevention
+4. Performance optimization (Redis)
+5. Multiple payout methods (PayPal, Wise)
 
 ### Low Priority (6+ Months)
-1. Multi-tier affiliates
+1. Multi-tier affiliates (MLM)
 2. AI features
-3. Enterprise features
+3. Enterprise features (SSO, RBAC)
 4. Marketplace
 5. GraphQL API
 
@@ -422,22 +473,32 @@ Want a feature prioritized? Consider sponsoring development:
 
 ## 🔄 Recently Completed
 
-### October 2025
-- ✅ Email notification system with Resend
-- ✅ OTP-based authentication
-- ✅ Affiliate status management
-- ✅ Batch operations for admin
-- ✅ Complete API documentation
-- ✅ Production deployment guides
-- ✅ Comprehensive wiki
+### February 2026 (v1.3.0)
+- ✅ 3 CRITICAL security fixes (login JWT, password hashing, referral tracking)
+- ✅ PrismaClient singleton migration (36 files)
+- ✅ 7 new admin pages (invoices, team, programs, coupons, resources, emails, program-settings)
+- ✅ 5 affiliate sub-pages (referrals, payouts, resources, reports, settings)
+- ✅ 10+ new API routes
+- ✅ 5 new database models
+- ✅ 156-assertion production test suite
+- ✅ 6 dead code files removed
+- ✅ Commission rates use partner group configuration
 
-### September 2025
-- ✅ Initial release (v1.0.0)
-- ✅ Core affiliate management features
-- ✅ Admin dashboard
-- ✅ Affiliate portal
-- ✅ Commission system
-- ✅ Payout processing
+### February 2026 (v1.2.0)
+- ✅ Complete shadcn/ui redesign (50+ components)
+- ✅ Advanced reporting (scheduled, saved, cohort)
+- ✅ API key management + rate limiting + analytics
+- ✅ 61 TypeScript errors resolved
+
+### December 2025 (v1.1.0)
+- ✅ UI Modernization with gradient effects
+- ✅ Analytics dashboard with charts
+- ✅ Webhook system (12 event types)
+
+### October 2025 (v1.0.0)
+- ✅ Initial release with core features
+- ✅ Admin dashboard & affiliate portal
+- ✅ Email notifications, OTP auth, commission system
 
 ---
 
@@ -479,5 +540,5 @@ Want a feature prioritized? Consider sponsoring development:
 </p>
 
 <p align="center">
-  Last Updated: October 10, 2025
+  Last Updated: February 17, 2026
 </p>

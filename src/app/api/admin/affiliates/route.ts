@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'fallback-secret-key'
@@ -136,6 +134,9 @@ export async function POST(request: NextRequest) {
     // Generate password if not provided
     const userPassword = password || `AF${Math.random().toString(36).substr(2, 8)}`;
 
+    // Hash password with bcrypt
+    const hashedPassword = await (await import('bcryptjs')).hash(userPassword, 12);
+
     // Create new user
     const newUser = await prisma.user.create({
       data: {
@@ -143,7 +144,7 @@ export async function POST(request: NextRequest) {
         email,
         role: 'AFFILIATE',
         status: 'ACTIVE',
-        password: userPassword // In production, hash this password
+        password: hashedPassword
       }
     });
 

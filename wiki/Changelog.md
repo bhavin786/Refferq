@@ -7,6 +7,105 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.0] - 2026-02-17
+
+### 🔒 Production Hardening, Admin Expansion & Affiliate Portal
+
+This release delivers critical security fixes, eliminates PrismaClient connection leaks across 36 files, adds 7 new admin pages, 5 affiliate sub-pages, 10+ new API routes, and a comprehensive 156-assertion production test suite. The platform is now verified production-ready.
+
+### 🔒 Security Fixes (CRITICAL)
+
+- **Login JWT Cookie** — Login API now creates JWT token via `SignJWT` and sets `auth-token` HTTP-only cookie (was missing entirely)
+- **Password Hashing** — Admin affiliate creation now hashes passwords with `bcrypt.hash(password, 12)` (was storing plain text)
+- **Referral Tracking** — `/r/[code]` route completely rewritten from broken `localStorage` mock to production Prisma queries (finds affiliate by `referralCode`, creates referral record, tracks click in `ReferralClick` table)
+- **JWT Secret Standardization** — All 20+ route files standardized to single fallback secret (previously 3 different strings caused cross-route auth failures)
+
+### 🐛 Bug Fixes (HIGH)
+
+- **Commission Rates** — Referral approval now uses `partnerGroup.commissionRate` and `metadata.estimated_value` instead of hardcoded 10%/₹100 values
+- **DELETE API Bugs** — Fixed 2 critical DELETE handlers that crashed with `prisma.undefined.delete()` due to wrong model references
+- **PrismaClient Singleton** — Migrated 36 files from `new PrismaClient()` to shared singleton import, eliminating connection pool exhaustion in production
+- **Invoice Delete** — Added missing delete functionality to admin invoices page (Trash2 icon + confirmation dialog)
+
+### ✨ Added
+
+#### New Admin Pages (7 pages)
+- `/admin/invoices` — Invoice management with create, view, delete, and status tracking
+- `/admin/team` — Team member management with role assignment and invitations
+- `/admin/programs` — Affiliate program management with commission rate configuration
+- `/admin/coupons` — Coupon/discount code management
+- `/admin/resources` — Marketing resource library (banners, links, documents)
+- `/admin/emails` — Email template editor with variable preview
+- `/admin/program-settings` — Referral tracking widget with embed code generator
+
+#### Affiliate Sub-Pages (5 pages)
+- `/affiliate/referrals` — Referral submissions and tracking
+- `/affiliate/payouts` — Payout history and requests
+- `/affiliate/resources` — Access marketing materials
+- `/affiliate/reports` — Performance reports and analytics
+- `/affiliate/settings` — Profile and payment settings
+
+#### New API Routes (10+ endpoints)
+- `GET/POST/DELETE /api/admin/invoices` — Invoice CRUD
+- `GET/POST/PUT/DELETE /api/admin/team` — Team member management
+- `GET/POST/PUT/DELETE /api/admin/programs` — Program management
+- `GET/POST/PUT/DELETE /api/admin/coupons` — Coupon management
+- `GET/POST/DELETE /api/admin/resources` — Resource management
+- `POST /api/admin/payouts/auto` — Automated payout processing
+- `POST /api/admin/refunds` — Refund protection with commission clawback
+- `GET/PUT /api/affiliate/branding` — Affiliate portal branding
+- `POST /api/affiliate/generate-code` — Referral code regeneration
+- `GET /api/affiliate/resources` — Affiliate resource access
+
+#### Database Models (5 new)
+- `Coupon` — Discount codes with usage tracking and expiration
+- `Resource` — Marketing materials (IMAGE, DOCUMENT, LINK, VIDEO)
+- `Invoice` — Invoice records with line items and tax
+- `Program` — Affiliate program configurations
+- `TeamMember` — Admin team with role-based access
+
+#### Production Test Suite
+- Comprehensive `scripts/test-all.ts` with 15 test sections
+- 156 assertions covering all 28 database models
+- Full affiliate pipeline test (referral → click → conversion → commission → balance → payout → transaction)
+- Data integrity checks (orphaned records, unhashed passwords, duplicate codes, negative balances)
+- File structure verification (26 pages + 48 API routes)
+- All test data created and cleaned up automatically
+
+#### Admin Sidebar Redesign
+- 3 navigation groups: Main, Management, Configuration
+- All 17 admin pages accessible from sidebar
+- Active state highlighting and section grouping
+
+#### Branded Affiliate Portal
+- Custom branding API with logo, colors, and company name
+- Branded sidebar with affiliate's company identity
+- Consistent design across all affiliate sub-pages
+
+### 🗑️ Removed
+
+#### Dead Code Cleanup (6 files)
+- `src/lib/database.ts` — 608-line localStorage mock (replaced by Prisma)
+- `src/services/api.ts` — Unused API client referencing non-existent endpoints
+- `src/context/AuthContext.tsx` — Legacy mock auth context
+- `src/components/Navigation.tsx` — Legacy navigation with broken links
+- `src/lib/api.ts` — Unused API wrapper
+- `route.ts` — Empty root route file
+
+### 🔧 Technical
+
+- Zero TypeScript errors (`npx tsc --noEmit` passes cleanly)
+- All 156 production tests pass (0 failures, 68.4s runtime)
+- PrismaClient singleton used across all 36+ files
+- JWT authentication verified: login, OTP, and all admin/affiliate routes
+- 28 database models verified with record counts
+- 1 admin user (ACTIVE), 102 active affiliates, 69 pending affiliates
+- Currency: INR (₹) with cents-based storage throughout
+- All passwords verified as properly hashed (bcrypt)
+- No orphaned records, no duplicate referral codes, no negative balances
+
+---
+
 ## [1.2.0] - 2026-02-17
 
 ### 🎨 shadcn/ui Redesign, Advanced Reporting & API Enhancements
@@ -400,6 +499,7 @@ See our [Roadmap](Roadmap) for upcoming features.
 
 | Version | Release Date | Highlights |
 |---------|--------------|------------|
+| 1.3.0 | 2026-02-17 | 🔒 Production Hardening, 3 Critical Security Fixes, 7 Admin Pages, 5 Affiliate Pages, 156-Test Suite |
 | 1.2.0 | 2026-02-17 | 🎨 shadcn/ui Redesign, Advanced Reporting, API Keys & Analytics, 61 TS Fixes |
 | 1.1.0 | 2025-12-14 | 🎨 UI Modernization, Analytics Dashboard, Webhooks System |
 | 1.0.0 | 2025-10-10 | 🎉 Initial release with core features |
@@ -531,9 +631,10 @@ Stay informed about new releases:
 
 | Version | Status | Support Until |
 |---------|--------|---------------|
-| 1.2.x | Current | Ongoing |
-| 1.1.x | Previous | Security updates (6 months) |
-| 1.0.x | Legacy | Upgrade recommended |
+| 1.3.x | Current | Ongoing |
+| 1.2.x | Previous | Security updates (6 months) |
+| 1.1.x | Legacy | Upgrade recommended |
+| 1.0.x | EOL | Upgrade required |
 
 ### Support Policy
 - **Current Version:** Full support with updates

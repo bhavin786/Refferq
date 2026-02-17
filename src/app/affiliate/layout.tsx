@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -41,6 +41,14 @@ import {
   Bell,
 } from 'lucide-react';
 
+interface BrandSettings {
+  companyName?: string;
+  companyLogo?: string;
+  brandBackgroundColor?: string;
+  brandButtonColor?: string;
+  brandTextColor?: string;
+}
+
 const mainNavItems = [
   { title: 'Dashboard', url: '/affiliate', icon: LayoutDashboard },
   { title: 'Referrals', url: '/affiliate/referrals', icon: Users },
@@ -53,7 +61,7 @@ const accountNavItems = [
   { title: 'Settings', url: '/affiliate/settings', icon: Settings },
 ];
 
-function AffiliateSidebar() {
+function AffiliateSidebar({ brand }: { brand: BrandSettings }) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
@@ -63,17 +71,24 @@ function AffiliateSidebar() {
     return pathname.startsWith(url);
   };
 
+  const accentColor = brand.brandButtonColor || '#059669';
+  const brandName = brand.companyName || 'Refferq';
+
   return (
     <Sidebar variant="inset">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <div className="flex items-center gap-3 px-2 py-1.5">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-sm">
-                <span className="text-lg font-bold">R</span>
-              </div>
+              {brand.companyLogo ? (
+                <img src={brand.companyLogo} alt={brandName} className="h-10 w-10 rounded-xl object-contain" />
+              ) : (
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl text-white shadow-sm" style={{ backgroundColor: accentColor }}>
+                  <span className="text-lg font-bold">{brandName.charAt(0)}</span>
+                </div>
+              )}
               <div className="flex flex-col">
-                <span className="text-sm font-bold">Refferq</span>
+                <span className="text-sm font-bold">{brandName}</span>
                 <span className="text-xs text-muted-foreground">Affiliate Portal</span>
               </div>
             </div>
@@ -138,7 +153,7 @@ function AffiliateSidebar() {
                   className="data-[state=open]:bg-sidebar-accent"
                 >
                   <Avatar className="h-8 w-8 rounded-lg">
-                    <AvatarFallback className="rounded-lg bg-emerald-600 text-white text-xs">
+                    <AvatarFallback className="rounded-lg text-white text-xs" style={{ backgroundColor: accentColor }}>
                       {user?.name?.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
@@ -177,6 +192,16 @@ function AffiliateSidebar() {
 
 export default function AffiliateLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
+  const [brand, setBrand] = useState<BrandSettings>({});
+
+  useEffect(() => {
+    fetch('/api/affiliate/branding')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.settings) setBrand(data.settings);
+      })
+      .catch(() => {});
+  }, []);
 
   if (loading) {
     return (
@@ -184,7 +209,7 @@ export default function AffiliateLayout({ children }: { children: React.ReactNod
         <div className="text-center">
           <div className="relative mx-auto h-12 w-12">
             <div className="absolute inset-0 rounded-full border-4 border-muted" />
-            <div className="absolute inset-0 animate-spin rounded-full border-4 border-transparent border-t-emerald-600" />
+            <div className="absolute inset-0 animate-spin rounded-full border-4 border-transparent" style={{ borderTopColor: brand.brandButtonColor || '#059669' }} />
           </div>
           <p className="mt-4 text-sm text-muted-foreground">Loading your dashboard...</p>
         </div>
@@ -211,7 +236,7 @@ export default function AffiliateLayout({ children }: { children: React.ReactNod
 
   return (
     <SidebarProvider>
-      <AffiliateSidebar />
+      <AffiliateSidebar brand={brand} />
       <SidebarInset>
         <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger className="-ml-1" />
