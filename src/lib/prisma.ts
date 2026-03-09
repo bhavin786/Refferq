@@ -14,16 +14,14 @@ export class DatabaseService {
   // User operations
   async createUser(userData: {
     email: string;
-    password: string;
+    password: string; // Already hashed by the caller/AuthService
     name: string;
     role: 'ADMIN' | 'AFFILIATE';
   }) {
-    const hashedPassword = await bcrypt.hash(userData.password, 12);
-    
     const user = await prisma.user.create({
       data: {
         email: userData.email,
-        password: hashedPassword,
+        password: userData.password,
         name: userData.name,
         role: userData.role,
         status: userData.role === 'ADMIN' ? 'ACTIVE' : 'INACTIVE',
@@ -51,7 +49,7 @@ export class DatabaseService {
     });
   }
 
-  async updateUser(id: string, updates: any) {
+  async updateUser(id: string, updates: Parameters<typeof prisma.user.update>[0]['data']) {
     return await prisma.user.update({
       where: { id },
       data: updates,
@@ -103,7 +101,7 @@ export class DatabaseService {
     });
   }
 
-  async updateAffiliate(id: string, updates: any) {
+  async updateAffiliate(id: string, updates: Parameters<typeof prisma.affiliate.update>[0]['data']) {
     return await prisma.affiliate.update({
       where: { id },
       data: updates,
@@ -162,7 +160,7 @@ export class DatabaseService {
     });
   }
 
-  async updateReferral(id: string, updates: any) {
+  async updateReferral(id: string, updates: Parameters<typeof prisma.referral.update>[0]['data']) {
     return await prisma.referral.update({
       where: { id },
       data: updates,
@@ -246,7 +244,7 @@ export class DatabaseService {
     });
   }
 
-  async updateCommission(id: string, updates: any) {
+  async updateCommission(id: string, updates: Parameters<typeof prisma.commission.update>[0]['data']) {
     return await prisma.commission.update({
       where: { id },
       data: updates,
@@ -372,10 +370,10 @@ export class DatabaseService {
 
     const [clicks, conversions, commissions] = await Promise.all([
       prisma.referralClick.count({
-        where: { 
-          referral: { 
-            affiliateId: affiliate.id 
-          } 
+        where: {
+          referral: {
+            affiliateId: affiliate.id
+          }
         },
       }),
       prisma.conversion.count({
