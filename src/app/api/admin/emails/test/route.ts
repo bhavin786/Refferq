@@ -65,7 +65,7 @@ export async function POST(request: Request) {
       referral_count: '5',
       amount: '$250.00',
       payout_method: 'PayPal',
-      partner_email: adminUser.email,
+      partner_email: user.email,
       signup_link: 'https://example.com/signup',
       dashboard_link: 'https://example.com/dashboard',
       reason: 'Does not meet our criteria',
