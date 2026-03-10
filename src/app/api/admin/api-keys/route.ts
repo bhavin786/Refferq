@@ -17,10 +17,11 @@ async function verifyAdmin(request: NextRequest) {
   }
 }
 
-function generateApiKey(): { key: string; prefix: string } {
+function generateApiKey(): { key: string; prefix: string; keyHash: string } {
   const key = `rfq_${crypto.randomBytes(32).toString('hex')}`;
   const prefix = key.slice(0, 12);
-  return { key, prefix };
+  const keyHash = crypto.createHash('sha256').update(key).digest('hex');
+  return { key, prefix, keyHash };
 }
 
 // GET - List API keys (masked)
@@ -73,12 +74,13 @@ export async function POST(request: NextRequest) {
 
     if (!name) return NextResponse.json({ error: 'Name is required' }, { status: 400 });
 
-    const { key, prefix } = generateApiKey();
+    const { key, prefix, keyHash } = generateApiKey();
 
     const apiKey = await prisma.apiKey.create({
       data: {
         name,
-        key,
+        key: null, // Never store the raw key in the database
+        keyHash,   // Store only the SHA-256 hash for verification
         prefix,
         userId: user.id,
         scopes: scopes || ['read'],
@@ -93,7 +95,7 @@ export async function POST(request: NextRequest) {
       apiKey: {
         id: apiKey.id,
         name: apiKey.name,
-        key: apiKey.key, // Full key only shown once
+        key, // Full key only shown once (not stored in DB)
         prefix: apiKey.prefix,
         scopes: apiKey.scopes,
         rateLimit: apiKey.rateLimit,

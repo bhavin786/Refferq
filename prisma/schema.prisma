@@ -481,7 +481,8 @@ model SavedReport {
 model ApiKey {
   id          String      @id @default(cuid())
   name        String
-  key         String      @unique
+  key         String?     // Cleared after creation for security; only shown once
+  keyHash     String      @unique @map("key_hash") // SHA-256 hash of the key for lookups
   prefix      String      // first 8 chars for display
   userId      String      @map("user_id")
   scopes      Json        @default("[\"read\"]") // read, write, admin
@@ -493,7 +494,7 @@ model ApiKey {
   updatedAt   DateTime    @updatedAt @map("updated_at")
   usageLogs   ApiUsageLog[]
 
-  @@index([key])
+  @@index([keyHash])
   @@index([userId])
   @@map("api_keys")
 }
