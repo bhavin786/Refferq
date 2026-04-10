@@ -77,6 +77,12 @@ export class OTPService {
         }
       });
 
+      // Dev mode: log OTP to console so local dev never requires real email
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`\n🔑 [DEV OTP] ${email} → ${code} (expires ${expiresAt.toISOString()})\n`);
+        return { success: true, message: 'OTP sent successfully to your email' };
+      }
+
       // Send OTP email
       const { Resend } = await import('resend');
       const resendClient = new Resend(process.env.RESEND_API_KEY);

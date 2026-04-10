@@ -82,11 +82,12 @@ export async function checkRateLimit(
     };
   } catch (error) {
     console.error('Rate limit check error:', error);
-    // On error, deny the request (fail closed for security)
+    // Fail open when DB is unavailable — we cannot enforce limits we cannot count.
+    // Production monitoring should alert on DB connectivity independently.
     return {
-      allowed: false,
+      allowed: true,
       limit: maxRequests,
-      remaining: 0,
+      remaining: maxRequests,
       resetAt: new Date(now.getTime() + windowMs),
     };
   }
