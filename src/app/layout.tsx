@@ -4,7 +4,7 @@ import { db } from '@/lib/prisma';
 import './globals.css';
 
 export const metadata = {
-  title: 'Refferq - Modern Affiliate Marketing Platform',
+  title: 'UPE Partner Portal - Affiliate Marketing Platform',
   description: 'Next-generation affiliate marketing platform with comprehensive tracking, commission management, and payout automation.',
 };
 
