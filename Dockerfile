@@ -40,9 +40,11 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Copy Prisma schema + CLI (needed for migrate deploy at runtime)
+# Copy Prisma schema + full Prisma packages (needed for db push at runtime)
+# Note: do NOT copy prisma CLI to /usr/local/bin — it breaks because the wasm
+# files are resolved relative to __dirname of the index.js entry point.
+# Call prisma via its absolute node_modules path instead.
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.bin/prisma /usr/local/bin/prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
