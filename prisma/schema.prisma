@@ -226,15 +226,16 @@ model ProgramSettings {
 }
 
 model PartnerGroup {
-  id             String      @id @default(cuid())
-  name           String
-  description    String?
-  commissionRate Float       @map("commission_rate")
-  signupUrl      String?     @map("signup_url")
-  isDefault      Boolean     @default(false) @map("is_default")
-  createdAt      DateTime    @default(now()) @map("created_at")
-  updatedAt      DateTime    @updatedAt @map("updated_at")
-  affiliates     Affiliate[]
+  id               String      @id @default(cuid())
+  name             String
+  description      String?
+  commissionRate   Float       @map("commission_rate")
+  tierThreshold    Int?        @map("tier_threshold") // min active merchants to auto-enter this tier
+  signupUrl        String?     @map("signup_url")
+  isDefault        Boolean     @default(false) @map("is_default")
+  createdAt        DateTime    @default(now()) @map("created_at")
+  updatedAt        DateTime    @updatedAt @map("updated_at")
+  affiliates       Affiliate[]
 
   @@map("partner_groups")
 }

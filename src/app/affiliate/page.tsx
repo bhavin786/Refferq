@@ -50,6 +50,7 @@ import {
   Banknote,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { TierProgress } from '@/components/ui/tier-progress';
 
 interface AffiliateStats {
   totalEarnings: number;
@@ -63,6 +64,8 @@ interface AffiliateStats {
   referralCode: string;
   currencySymbol: string;
   nextMaturesAt: string | null;
+  currentTier: string | null;
+  activeMerchants: number;
 }
 
 interface Referral {
@@ -118,6 +121,8 @@ export default function AffiliateDashboard() {
           referralCode: data.affiliate?.referralCode || '',
           currencySymbol: data.currencySymbol || '₹',
           nextMaturesAt: data.stats?.nextMaturesAt || null,
+          currentTier: data.affiliate?.partnerGroup?.name ?? null,
+          activeMerchants: data.referrals?.filter((r: any) => r.status === 'APPROVED').length || 0,
         });
         setReferrals(data.referrals || []);
         setCurrencySymbol(data.currencySymbol || '₹');
@@ -312,6 +317,12 @@ export default function AffiliateDashboard() {
           </motion.div>
         ))}
       </div>
+
+      {/* Partner Tier Progress */}
+      <TierProgress
+        currentTier={stats?.currentTier ?? null}
+        activeMerchants={stats?.activeMerchants ?? 0}
+      />
 
       {/* Referral Links */}
       <Card>

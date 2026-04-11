@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { checkAndEscalateTier } from '@/lib/tier-escalation';
 
 /**
  * POST /api/track/conversion - Track conversions/sales
@@ -137,6 +138,15 @@ export async function POST(req: NextRequest) {
 
     // Note: Commission calculation will be done by the commission rules system
     // This just creates the conversion record
+
+    // Check and auto-escalate partner tier (non-blocking — failure doesn't break tracking)
+    const tierResult = await checkAndEscalateTier(affiliate.id).catch((err) => {
+      console.warn('Tier escalation check failed (non-fatal):', err.message);
+      return null;
+    });
+    if (tierResult?.promoted) {
+      console.log(`⬆️  Tier promotion: ${affiliate.user.email} → ${tierResult.newTier} (was ${tierResult.previousTier})`);
+    }
 
     console.log('✅ Conversion tracked successfully:', {
       conversionId: conversion.id,
