@@ -6,7 +6,7 @@ echo "NODE_ENV: $NODE_ENV"
 echo "PORT: $PORT"
 
 echo "Syncing database schema..."
-prisma db push --accept-data-loss
+NODE_PATH=/app/node_modules prisma db push --accept-data-loss
 
 echo "Starting server..."
 exec node server.js
