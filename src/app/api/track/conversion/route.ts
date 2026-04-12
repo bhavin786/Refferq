@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
       const existingAttribution = await prisma.referral.findFirst({
         where: {
           leadEmail: customerEmail,
-          status: { in: ['APPROVED', 'CONVERTED'] },
+          status: 'APPROVED',
           NOT: { affiliateId: affiliate.id },
         },
       });
