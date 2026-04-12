@@ -455,6 +455,7 @@ enum EmailTemplateType {
   COMMISSION_APPROVED
   PAYOUT_GENERATED
   REFERRAL_CONVERTED
+  PASSWORD_RESET
 }
 
 enum EmailStatus {
