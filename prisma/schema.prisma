@@ -185,6 +185,9 @@ model OTP {
   @@map("otps")
 }
 
+// defaultPartnerCode: referral code used when no affiliate attribution exists.
+// Set to the super-admin's code so all organic signups have a tracking anchor.
+// The admin role is exempt from earning commission on these (see tier-escalation).
 model ProgramSettings {
   id                        String   @id @default(cuid())
   programId                 String   @unique @map("program_id")
@@ -194,6 +197,7 @@ model ProgramSettings {
   currency                  String   @default("INR")
   blockedCountries          Json     @default("[]") @map("blocked_countries")
   portalSubdomain           String   @map("portal_subdomain")
+  defaultPartnerCode        String?  @map("default_partner_code") // fallback referral code for organic signups
   termsOfService            String?  @map("terms_of_service")
   minimumPayoutThreshold    Int      @default(0) @map("minimum_payout_threshold")
   payoutTerm                String   @default("NET-15") @map("payout_term")

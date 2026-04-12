@@ -44,7 +44,15 @@ export async function POST(req: NextRequest) {
       timestamp,
     } = body;
 
-    if (!referralCode) {
+    // If no referral code provided, fall back to the program's default partner code
+    // (super admin's code — tracks organic signups without paying commission)
+    let resolvedCode = referralCode;
+    if (!resolvedCode) {
+      const settings = await prisma.programSettings.findFirst();
+      resolvedCode = settings?.defaultPartnerCode ?? null;
+    }
+
+    if (!resolvedCode) {
       return NextResponse.json(
         { success: false, error: 'Referral code is required' },
         { status: 400 }
@@ -53,13 +61,14 @@ export async function POST(req: NextRequest) {
 
     // Find affiliate by referral code
     const affiliate = await prisma.affiliate.findUnique({
-      where: { referralCode },
+      where: { referralCode: resolvedCode },
       include: {
         user: {
           select: {
             id: true,
             name: true,
             email: true,
+            role: true,
             status: true,
           },
         },
@@ -72,6 +81,9 @@ export async function POST(req: NextRequest) {
         { status: 404 }
       );
     }
+
+    // Admin (super partner) earns 0% commission — used only for organic tracking
+    const isAdminPartner = affiliate.user.role === 'ADMIN';
 
     if (affiliate.user.status !== 'ACTIVE') {
       return NextResponse.json(
@@ -117,6 +129,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Create conversion record
+    // Admin partners (super admin default) are tracked but earn 0% commission
     const amountCents = Math.round((amount || 0) * 100);
 
     const conversion = await prisma.conversion.create({
@@ -126,26 +139,31 @@ export async function POST(req: NextRequest) {
         eventType: 'PURCHASE',
         amountCents,
         currency: currency || 'USD',
-        status: 'PENDING',
+        // Admin partner conversions are marked APPROVED immediately with no commission payout
+        status: isAdminPartner ? 'APPROVED' : 'PENDING',
         eventMetadata: {
           orderId: orderId || null,
           url: url || null,
           timestamp: timestamp || new Date().toISOString(),
+          is_organic: isAdminPartner,  // flag for analytics: organic vs partner-referred
           ...metadata,
         },
       },
     });
 
-    // Note: Commission calculation will be done by the commission rules system
-    // This just creates the conversion record
+    // Commission calculation is handled by commission rules system.
+    // Admin-attributed conversions are excluded from commission payouts (is_organic flag).
 
-    // Check and auto-escalate partner tier (non-blocking — failure doesn't break tracking)
-    const tierResult = await checkAndEscalateTier(affiliate.id).catch((err) => {
-      console.warn('Tier escalation check failed (non-fatal):', err.message);
-      return null;
-    });
-    if (tierResult?.promoted) {
-      console.log(`⬆️  Tier promotion: ${affiliate.user.email} → ${tierResult.newTier} (was ${tierResult.previousTier})`);
+    // Tier escalation only applies to non-admin partners
+    // Check and auto-escalate partner tier — skip for admin (not a real partner tier)
+    if (!isAdminPartner) {
+      const tierResult = await checkAndEscalateTier(affiliate.id).catch((err) => {
+        console.warn('Tier escalation check failed (non-fatal):', err.message);
+        return null;
+      });
+      if (tierResult?.promoted) {
+        console.log(`⬆️  Tier promotion: ${affiliate.user.email} → ${tierResult.newTier} (was ${tierResult.previousTier})`);
+      }
     }
 
     console.log('✅ Conversion tracked successfully:', {
