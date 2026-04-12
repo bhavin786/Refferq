@@ -5,7 +5,7 @@ export async function GET(request: NextRequest) {
     const spec = {
         openapi: '3.0.3',
         info: {
-            title: 'UPE Partner Portal API',
+            title: 'Partner Portal API',
             version: '1.1.0',
             description: 'Open-source affiliate marketing platform API. Manage affiliates, referrals, conversions, commissions, and payouts.',
             contact: { email: 'hello@upemaster.com' },

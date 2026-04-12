@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Target, TrendingUp, Users, DollarSign, Award, Zap, ArrowRight, CheckCircle } from 'lucide-react';
 
 export const metadata = {
-  title: 'Partner Program — UPE Partner Portal',
+  title: 'Partner Program — Partner Portal',
   description: 'Join the UPE Partner Program and earn recurring commissions for every merchant you refer. Start at 15%, grow to 25%.',
 };
 
@@ -64,7 +64,7 @@ export default function JoinPage() {
             <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
               <Target className="w-5 h-5 text-white" />
             </div>
-            <span className="font-semibold text-lg">UPE Partner Portal</span>
+            <span className="font-semibold text-lg">Partner Portal</span>
           </div>
           <div className="flex items-center gap-3">
             <Link href="/login">
@@ -246,7 +246,7 @@ export default function JoinPage() {
             <div className="w-6 h-6 bg-emerald-500 rounded flex items-center justify-center">
               <Target className="w-4 h-4 text-white" />
             </div>
-            UPE Partner Portal
+            Partner Portal
           </div>
           <div>© {new Date().getFullYear()} UPEmaster. All rights reserved.</div>
         </div>

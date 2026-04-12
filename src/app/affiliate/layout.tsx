@@ -72,7 +72,7 @@ function AffiliateSidebar({ brand }: { brand: BrandSettings }) {
   };
 
   const accentColor = brand.brandButtonColor || '#059669';
-  const brandName = brand.companyName || 'UPE Partner Portal';
+  const brandName = brand.companyName || 'Partner Portal';
 
   return (
     <Sidebar variant="inset">

@@ -81,21 +81,21 @@ export async function POST(request: NextRequest) {
         </p>
       </div>
       <div class="footer">
-        <p>This report was sent from UPE Partner Portal by ${user.name} (${user.email})</p>
-        <p>© ${new Date().getFullYear()} UPE Partner Portal. All rights reserved.</p>
+        <p>This report was sent from Partner Portal by ${user.name} (${user.email})</p>
+        <p>© ${new Date().getFullYear()} Partner Portal. All rights reserved.</p>
       </div>
     </body>
     </html>
     `;
 
     // Send to all recipients
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'UPE Partner Portal <noreply@upemaster.com>';
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'Partner Portal <noreply@upemaster.com>';
     const results = await Promise.allSettled(
       recipients.map((email: string) =>
         resend.emails.send({
           from: fromEmail,
           to: email.trim(),
-          subject: `[UPE Partner Portal] ${reportData.type || 'Report'} — ${reportDate}`,
+          subject: `[Partner Portal] ${reportData.type || 'Report'} — ${reportDate}`,
           html,
         })
       )

@@ -3,12 +3,12 @@ import { NextResponse } from 'next/server';
 /**
  * GET /api/public/tracking-snippet
  *
- * Returns the JavaScript tracking snippet that upemaster.com embeds.
+ * Returns the JavaScript tracking snippet that merchant sites embed.
  * The snippet:
  *   1. Reads the affiliate_attribution cookie (set by /r/[code] redirect)
  *   2. Also reads ?ref= query param as fallback
- *   3. Exposes window.UPEPartner.trackConversion(email, amount, currency) for
- *      upemaster.com to call after a successful signup or subscription payment
+ *   3. Exposes window.PartnerPortal.trackConversion(email, amount, currency) for
+ *      merchant sites to call after a successful signup or subscription payment
  *
  * No auth required — public endpoint, script contains no secrets.
  */
@@ -65,8 +65,8 @@ export async function GET() {
       body: JSON.stringify(payload),
       keepalive: true
     }).then(function(r) {
-      if (!r.ok) r.json().then(function(d) { console.warn('[UPEPartner] Conversion track failed:', d); });
-    }).catch(function(e) { console.warn('[UPEPartner] Conversion track error:', e); });
+      if (!r.ok) r.json().then(function(d) { console.warn('[PartnerPortal] Conversion track failed:', d); });
+    }).catch(function(e) { console.warn('[PartnerPortal] Conversion track error:', e); });
   }
 
   function setAttributionCookie(code) {
@@ -100,7 +100,7 @@ export async function GET() {
   // Auto-track click on page load if ?ref= is in URL
   if (getUrlParam('ref')) { trackClick(getUrlParam('ref')); }
 
-  w.UPEPartner = { trackConversion: trackConversion, trackClick: trackClick, getAttribution: getAttribution };
+  w.PartnerPortal = { trackConversion: trackConversion, trackClick: trackClick, getAttribution: getAttribution };
 })(window);
 `.trim();
 

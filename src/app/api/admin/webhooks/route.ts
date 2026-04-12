@@ -263,7 +263,7 @@ export async function POST(request: NextRequest) {
         event: 'test',
         timestamp: new Date().toISOString(),
         data: { 
-          message: 'This is a test webhook from UPE Partner Portal',
+          message: 'This is a test webhook from Partner Portal',
           testId: crypto.randomBytes(8).toString('hex')
         }
       };

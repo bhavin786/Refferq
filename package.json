@@ -2,7 +2,7 @@
   "name": "refferq",
   "version": "1.1.0",
   "description": "Open-source affiliate marketing platform with comprehensive tracking, commission management, and payout automation. Built with Next.js, TypeScript, and PostgreSQL.",
-  "author": "UPE Partner Portal Team <hello@upemaster.com>",
+  "author": "Partner Portal Team <hello@upemaster.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
