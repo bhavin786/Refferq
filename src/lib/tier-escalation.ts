@@ -19,7 +19,7 @@ export async function checkAndEscalateTier(affiliateId: string): Promise<{
   const activeMerchantCount = await prisma.conversion.count({
     where: {
       affiliateId,
-      status: { in: ['APPROVED', 'PAID'] },
+      status: 'APPROVED',
     },
   });
 
