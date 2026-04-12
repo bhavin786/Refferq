@@ -69,9 +69,20 @@ export async function GET() {
     }).catch(function(e) { console.warn('[UPEPartner] Conversion track error:', e); });
   }
 
+  function setAttributionCookie(code) {
+    // Only set if not already attributed — first-click wins
+    if (getCookie('affiliate_attribution')) return;
+    var expires = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toUTCString();
+    document.cookie = 'affiliate_attribution=' + encodeURIComponent(JSON.stringify({
+      referral_code: code,
+      attribution_key: code + '_' + Date.now()
+    })) + '; expires=' + expires + '; path=/; SameSite=Lax';
+  }
+
   function trackClick(referralCode) {
     var code = referralCode || getUrlParam('ref');
     if (!code) return;
+    setAttributionCookie(code);
     fetch(PORTAL + '/api/track/referral', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-API-Key': PUBLIC_KEY },

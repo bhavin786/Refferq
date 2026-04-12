@@ -92,6 +92,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Attribution lock: if this email already has an approved referral under a
+    // DIFFERENT partner, preserve the original attribution — do not re-attribute.
+    if (customerEmail) {
+      const existingAttribution = await prisma.referral.findFirst({
+        where: {
+          leadEmail: customerEmail,
+          status: { in: ['APPROVED', 'CONVERTED'] },
+          NOT: { affiliateId: affiliate.id },
+        },
+      });
+      if (existingAttribution) {
+        console.log(`🔒 Attribution locked for ${customerEmail} (existing partner preserved)`);
+        return NextResponse.json({
+          success: true,
+          message: 'Conversion tracked (existing attribution preserved)',
+          attribution_locked: true,
+        });
+      }
+    }
+
     // Check if referral with this email already exists
     let referral;
     if (customerEmail) {
