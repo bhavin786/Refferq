@@ -40,9 +40,15 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    // SECURITY: Never expose the full API key hash — show only a masked prefix
+    const safeIntegration = {
+      ...integration,
+      apiKey: integration.apiKey ? integration.apiKey.slice(0, 7) + '...' : null,
+    };
+
     return NextResponse.json({
       success: true,
-      integration,
+      integration: safeIntegration,
     });
 
   } catch (error) {

@@ -43,15 +43,16 @@ export async function POST(request: NextRequest) {
         data: { usedAt: new Date() },
       });
 
-      // Generate a secure random token
-      const token = crypto.randomBytes(32).toString('hex');
+      // Generate a secure random token — store hash, send raw in email
+      const rawToken = crypto.randomBytes(32).toString('hex');
+      const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
       await prisma.passwordResetToken.create({
-        data: { token, userId: user.id, expiresAt },
+        data: { token: tokenHash, userId: user.id, expiresAt },
       });
 
-      await emailService.sendPasswordResetEmail(normalizedEmail, token);
+      await emailService.sendPasswordResetEmail(normalizedEmail, rawToken);
     }
 
     // Same response whether email exists or not

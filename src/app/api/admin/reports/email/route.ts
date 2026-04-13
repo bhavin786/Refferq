@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
     `;
 
     // Send to all recipients
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'Partner Portal <noreply@upemaster.com>';
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'Refferq <noreply@refferq.com>';
     const results = await Promise.allSettled(
       recipients.map((email: string) =>
         resend.emails.send({

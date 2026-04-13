@@ -16,7 +16,7 @@ export async function GET() {
   const snippet = `
 (function(w) {
   'use strict';
-  var PORTAL = 'https://partner.upemaster.com';
+  var PORTAL = 'https://app.refferq.com';
   var PUBLIC_KEY = 'pk_e8cc2dab4dde6d28b5bec0ddae843d13130bbd5104d56e166bf638a78b6fbfbc';
   var DEFAULT_REF = 'UPEADM-8B93';
 
@@ -108,7 +108,7 @@ export async function GET() {
     headers: {
       'Content-Type': 'application/javascript; charset=utf-8',
       'Cache-Control': 'public, max-age=3600',
-      'Access-Control-Allow-Origin': 'https://upemaster.com',
+      'Access-Control-Allow-Origin': '*',
     },
   });
 }

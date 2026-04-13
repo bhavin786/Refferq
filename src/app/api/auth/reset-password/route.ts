@@ -37,9 +37,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find token record
+    // Hash the incoming token to match the stored hash
+    const crypto = await import('crypto');
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+    // Find token record by hash
     const resetRecord = await prisma.passwordResetToken.findUnique({
-      where: { token },
+      where: { token: tokenHash },
       include: { user: true },
     });
 

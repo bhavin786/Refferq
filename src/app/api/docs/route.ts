@@ -8,11 +8,11 @@ export async function GET(request: NextRequest) {
             title: 'Partner Portal API',
             version: '1.1.0',
             description: 'Open-source affiliate marketing platform API. Manage affiliates, referrals, conversions, commissions, and payouts.',
-            contact: { email: 'hello@upemaster.com' },
+            contact: { email: 'hello@refferq.com' },
             license: { name: 'MIT', url: 'https://opensource.org/licenses/MIT' },
         },
         servers: [
-            { url: process.env.NEXT_PUBLIC_APP_URL || 'https://partner.upemaster.com', description: 'Production' },
+            { url: process.env.NEXT_PUBLIC_APP_URL || 'https://app.refferq.com', description: 'Production' },
         ],
         tags: [
             { name: 'Auth', description: 'Authentication endpoints' },

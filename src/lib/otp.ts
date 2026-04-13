@@ -7,6 +7,13 @@ export class OTPService {
     return crypto.randomInt(100000, 999999).toString();
   }
 
+  // Hash OTP code with HMAC for secure storage
+  private hashOTP(code: string): string {
+    return crypto.createHmac('sha256', process.env.JWT_SECRET || 'otp-secret')
+      .update(code)
+      .digest('hex');
+  }
+
   // Generate and send OTP via email
   async sendOTP(email: string): Promise<{ success: boolean; message: string }> {
     try {
@@ -15,24 +22,11 @@ export class OTPService {
         where: { email: email.toLowerCase() }
       });
 
-      if (!user) {
+      if (!user || user.status === 'PENDING' || user.status === 'INACTIVE' || user.status === 'SUSPENDED') {
+        // SECURITY: Generic message to prevent account enumeration
         return {
           success: false,
-          message: 'No account found with this email address'
-        };
-      }
-
-      // Check user status
-      if (user.status === 'PENDING') {
-        return {
-          success: false,
-          message: 'Your account is pending approval. Please wait for admin activation.'
-        };
-      }
-      if (user.status === 'INACTIVE' || user.status === 'SUSPENDED') {
-        return {
-          success: false,
-          message: 'Your account is not active. Please contact support.'
+          message: 'If this email is registered and active, an OTP will be sent.'
         };
       }
 
@@ -68,11 +62,12 @@ export class OTPService {
       const code = this.generateOTP();
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-      // Store OTP in database
+      // Store hashed OTP in database
+      const hashedCode = this.hashOTP(code);
       await (prisma as any).OTP.create({
         data: {
           email: email.toLowerCase(),
-          code,
+          code: hashedCode,
           expiresAt
         }
       });
@@ -122,11 +117,12 @@ export class OTPService {
     message: string;
   }> {
     try {
-      // Find the OTP
+      // Hash the submitted code and compare against stored hash
+      const hashedCode = this.hashOTP(code);
       const otp = await (prisma as any).OTP.findFirst({
         where: {
           email: email.toLowerCase(),
-          code,
+          code: hashedCode,
           isUsed: false,
           expiresAt: {
             gt: new Date()
@@ -139,7 +135,7 @@ export class OTPService {
         await (prisma as any).OTP.updateMany({
           where: {
             email: email.toLowerCase(),
-            code,
+            code: hashedCode,
             isUsed: false
           },
           data: {

@@ -144,8 +144,8 @@ export default function PartnerDetailPage() {
         if (affiliate) {
           setPartner({
             id: affiliate.id,
-            name: affiliate.name,
-            email: affiliate.email,
+            name: affiliate.user?.name || '',
+            email: affiliate.user?.email || '',
             referralCode: affiliate.referralCode,
             partnerGroup: affiliate.partnerGroup,
             commissionRate: affiliate.commissionRate || 0.20,

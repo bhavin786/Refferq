@@ -9,6 +9,40 @@ interface RateLimitResult {
   resetAt: Date;
 }
 
+// In-memory fallback rate limiter for when DB is unavailable
+const memoryStore = new Map<string, { count: number; resetAt: number }>();
+
+function checkMemoryRateLimit(
+  identifier: string,
+  endpoint: string,
+  maxRequests: number,
+  windowMs: number
+): RateLimitResult {
+  const key = `${identifier}:${endpoint}`;
+  const now = Date.now();
+  const entry = memoryStore.get(key);
+
+  if (!entry || now > entry.resetAt) {
+    memoryStore.set(key, { count: 1, resetAt: now + windowMs });
+    return { allowed: true, limit: maxRequests, remaining: maxRequests - 1, resetAt: new Date(now + windowMs) };
+  }
+
+  entry.count++;
+  if (entry.count > maxRequests) {
+    return { allowed: false, limit: maxRequests, remaining: 0, resetAt: new Date(entry.resetAt) };
+  }
+
+  return { allowed: true, limit: maxRequests, remaining: maxRequests - entry.count, resetAt: new Date(entry.resetAt) };
+}
+
+// Periodically clean expired entries (every 60s)
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of memoryStore) {
+    if (now > entry.resetAt) memoryStore.delete(key);
+  }
+}, 60_000);
+
 /**
  * Check and enforce rate limiting for an API key or IP address.
  * Uses a sliding window approach stored in the database.
@@ -81,15 +115,9 @@ export async function checkRateLimit(
       resetAt: new Date(currentWindowStart.getTime() + windowMs),
     };
   } catch (error) {
-    console.error('Rate limit check error:', error);
-    // Fail open when DB is unavailable — we cannot enforce limits we cannot count.
-    // Production monitoring should alert on DB connectivity independently.
-    return {
-      allowed: true,
-      limit: maxRequests,
-      remaining: maxRequests,
-      resetAt: new Date(now.getTime() + windowMs),
-    };
+    console.error('Rate limit check error (falling back to in-memory):', error);
+    // SECURITY: Fall back to in-memory rate limiting instead of failing open
+    return checkMemoryRateLimit(identifier, endpoint, maxRequests, windowMs);
   }
 }
 

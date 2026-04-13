@@ -9,12 +9,19 @@ const JWT_SECRET = new TextEncoder().encode(
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
+    // SECURITY: Strip any incoming x-user-id/x-user-role headers to prevent injection
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.delete('x-user-id');
+    requestHeaders.delete('x-user-role');
+
     // 1. Define protected routes
     const isAdminRoute = pathname.startsWith('/api/admin') || pathname.startsWith('/admin');
     const isAffiliateRoute = pathname.startsWith('/api/affiliate') || pathname.startsWith('/affiliate');
 
     if (!isAdminRoute && !isAffiliateRoute) {
-        return NextResponse.next();
+        return NextResponse.next({
+            request: { headers: requestHeaders },
+        });
     }
 
     // 2. Get token from cookies

@@ -30,7 +30,10 @@ export async function POST(request: NextRequest) {
 
     // Generate secure API keys
     const publicKey = 'pk_' + crypto.randomBytes(32).toString('hex');
-    const apiKey = 'sk_' + crypto.randomBytes(32).toString('hex');
+    const rawApiKey = 'sk_' + crypto.randomBytes(32).toString('hex');
+    // SECURITY: Store only a SHA-256 hash of the secret key
+    const apiKeyHash = crypto.createHash('sha256').update(rawApiKey).digest('hex');
+    const apiKeyPrefix = rawApiKey.slice(0, 7) + '...'; // Store prefix for display
 
     // Check if integration settings exist
     const existing = await prisma.integrationSettings.findUnique({
@@ -40,23 +43,21 @@ export async function POST(request: NextRequest) {
     let integration;
 
     if (existing) {
-      // Update existing
       integration = await prisma.integrationSettings.update({
         where: { userId: user.id },
         data: {
           publicKey,
-          apiKey,
+          apiKey: apiKeyHash,
           provider: 'refferq',
           isActive: true,
         }
       });
     } else {
-      // Create new
       integration = await prisma.integrationSettings.create({
         data: {
           userId: user.id,
           publicKey,
-          apiKey,
+          apiKey: apiKeyHash,
           provider: 'refferq',
           isActive: true,
           config: {},
@@ -64,14 +65,18 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Return the raw key ONLY on generation — it cannot be retrieved later
     return NextResponse.json({
       success: true,
-      message: 'API keys generated successfully',
+      message: 'API keys generated successfully. Save the secret key — it will not be shown again.',
       keys: {
         publicKey: integration.publicKey,
-        apiKey: integration.apiKey,
+        apiKey: rawApiKey,
       },
-      integration,
+      integration: {
+        ...integration,
+        apiKey: apiKeyPrefix, // Never expose the hash
+      },
     });
 
   } catch (error) {
