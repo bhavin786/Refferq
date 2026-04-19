@@ -65,10 +65,10 @@ export async function middleware(request: NextRequest) {
             return NextResponse.redirect(new URL('/login', request.url));
         }
 
-        // 5. Inject user info into headers for API usage (optional but helpful)
-        const response = NextResponse.next();
-        response.headers.set('x-user-id', payload.userId as string);
-        response.headers.set('x-user-role', userRole);
+        // 5. Inject user info into request headers so API routes can read them
+        requestHeaders.set('x-user-id', payload.userId as string);
+        requestHeaders.set('x-user-role', userRole);
+        const response = NextResponse.next({ request: { headers: requestHeaders } });
 
         return response;
     } catch (error) {
