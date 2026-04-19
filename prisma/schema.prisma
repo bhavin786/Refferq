@@ -105,10 +105,12 @@ model Conversion {
   amountCents   Int              @map("amount_cents")
   currency      String           @default("USD")
   status        ConversionStatus @default(PENDING)
-  eventMetadata Json             @default("{}") @map("event_metadata")
-  createdAt     DateTime         @default(now()) @map("created_at")
-  updatedAt     DateTime         @updatedAt @map("updated_at")
-  commissions   Commission[]
+  eventMetadata   Json             @default("{}") @map("event_metadata")
+  idempotencyKey  String?          @unique @map("idempotency_key")
+  sourceTag       String?          @default("default") @map("source_tag")
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  commissions     Commission[]
   affiliate     Affiliate        @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
   referral      Referral?        @relation(fields: [referralId], references: [id])
 
@@ -213,6 +215,7 @@ model ProgramSettings {
   blockedCountries          Json     @default("[]") @map("blocked_countries")
   portalSubdomain           String   @map("portal_subdomain")
   defaultPartnerCode        String?  @map("default_partner_code") // fallback referral code for organic signups
+  sourceTag                 String   @default("default") @map("source_tag") // identifies this program instance (e.g. "hotel-main", "saas-app")
   termsOfService            String?  @map("terms_of_service")
   minimumPayoutThreshold    Int      @default(0) @map("minimum_payout_threshold")
   payoutTerm                String   @default("NET-15") @map("payout_term")

@@ -2,59 +2,94 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Target, TrendingUp, Users, DollarSign, Award, Zap, ArrowRight, CheckCircle } from 'lucide-react';
 
-export const metadata = {
-  title: 'Partner Program — Partner Portal',
-  description: 'Join the UPE Partner Program and earn recurring commissions for every merchant you refer. Start at 15%, grow to 25%.',
-};
-
-const TIERS = [
-  {
-    name: 'Bronze',
-    rate: '15%',
-    threshold: 'Start here',
-    color: 'from-amber-700 to-amber-500',
-    border: 'border-amber-500/30',
-    badge: 'bg-amber-900/30 text-amber-400',
-    merchants: '1–9 active merchants',
-  },
-  {
-    name: 'Silver',
-    rate: '20%',
-    threshold: '10 merchants',
-    color: 'from-slate-400 to-slate-300',
-    border: 'border-slate-400/40',
-    badge: 'bg-slate-700/40 text-slate-300',
-    merchants: '10–24 active merchants',
-    highlight: true,
-  },
-  {
-    name: 'Gold',
-    rate: '25%',
-    threshold: '25 merchants',
-    color: 'from-yellow-500 to-yellow-300',
-    border: 'border-yellow-500/40',
-    badge: 'bg-yellow-900/30 text-yellow-400',
-    merchants: '25+ active merchants',
-  },
+// Tier colour palette cycles by index so layout stays visually distinct
+const TIER_STYLES = [
+  { color: 'from-amber-700 to-amber-500', border: 'border-amber-500/30', badge: 'bg-amber-900/30 text-amber-400' },
+  { color: 'from-slate-400 to-slate-300', border: 'border-slate-400/40',  badge: 'bg-slate-700/40 text-slate-300',  highlight: true },
+  { color: 'from-yellow-500 to-yellow-300', border: 'border-yellow-500/40', badge: 'bg-yellow-900/30 text-yellow-400' },
+  { color: 'from-emerald-500 to-emerald-300', border: 'border-emerald-500/40', badge: 'bg-emerald-900/30 text-emerald-400' },
 ];
 
 const HOW_IT_WORKS = [
-  { icon: Users, step: '01', title: 'Register as a Partner', body: 'Create your partner account and get your unique referral link in minutes.' },
-  { icon: Zap, step: '02', title: 'Share Your Link', body: 'Share your referral link with merchants — on your blog, social, email, or direct.' },
-  { icon: TrendingUp, step: '03', title: 'Merchants Sign Up', body: 'When a merchant registers via your link and activates their account, you earn.' },
-  { icon: DollarSign, step: '04', title: 'Earn Every Month', body: 'Collect recurring commission for as long as the merchant stays active. No cap.' },
+  { icon: Users,       step: '01', title: 'Register as a Partner', body: 'Create your partner account and get your unique referral link in minutes.' },
+  { icon: Zap,         step: '02', title: 'Share Your Link',        body: 'Share your referral link with merchants — on your blog, social, email, or direct.' },
+  { icon: TrendingUp,  step: '03', title: 'Merchants Sign Up',      body: 'When a merchant registers via your link and activates their account, you earn.' },
+  { icon: DollarSign,  step: '04', title: 'Earn Every Month',       body: 'Collect recurring commission for as long as the merchant stays active. No cap.' },
 ];
 
 const BENEFITS = [
   'Recurring lifetime commission — earn monthly, not once',
-  'Auto-tier upgrades — hit 10 merchants, earn 20% automatically',
+  'Auto-tier upgrades — automatically unlock higher rates as you grow',
   'Real-time earnings dashboard with payout tracking',
   '90-day attribution window — get credit even if merchants take time to decide',
   'Monthly payouts on the 15th — no minimum holdups',
   'Dedicated partner support and resources',
 ];
 
-export default function JoinPage() {
+interface Tier {
+  id: string;
+  name: string;
+  commissionRate: number;
+  tierThreshold: number | null;
+}
+
+interface BrandingSettings {
+  companyName?: string;
+  programName?: string;
+  companyLogo?: string | null;
+  brandBackgroundColor?: string;
+  brandButtonColor?: string;
+  brandTextColor?: string;
+}
+
+async function fetchBranding(): Promise<BrandingSettings> {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const res = await fetch(`${baseUrl}/api/affiliate/branding`, { cache: 'no-store' });
+    if (!res.ok) return {};
+    const data = await res.json();
+    return data.settings ?? {};
+  } catch {
+    return {};
+  }
+}
+
+async function fetchTiers(): Promise<Tier[]> {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const res = await fetch(`${baseUrl}/api/public/tiers`, { cache: 'no-store' });
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
+}
+
+export async function generateMetadata() {
+  const branding = await fetchBranding();
+  const programName = branding.programName || process.env.PROGRAM_NAME || 'Partner Program';
+  const companyName = branding.companyName || process.env.COMPANY_NAME || 'Partner Portal';
+  return {
+    title: `${programName} — ${companyName}`,
+    description: `Join the ${programName} and earn recurring commissions for every merchant you refer.`,
+  };
+}
+
+export default async function JoinPage() {
+  const [branding, tiers] = await Promise.all([fetchBranding(), fetchTiers()]);
+
+  const programName = branding.programName || process.env.PROGRAM_NAME || 'Partner Program';
+  const companyName = branding.companyName || process.env.COMPANY_NAME || 'Partner Portal';
+
+  // Derive a human-readable max rate string for the hero badge
+  const maxRate = tiers.length > 0
+    ? `${Math.round(Math.max(...tiers.map((t) => t.commissionRate)) * 100)}%`
+    : null;
+
+  const heroRateRange = tiers.length >= 2
+    ? `${Math.round(Math.min(...tiers.map((t) => t.commissionRate)) * 100)}–${Math.round(Math.max(...tiers.map((t) => t.commissionRate)) * 100)}%`
+    : maxRate ?? 'recurring';
+
   return (
     <main className="min-h-screen bg-gray-950 text-white">
       {/* Nav */}
@@ -86,14 +121,14 @@ export default function JoinPage() {
         <div className="max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-4 py-1.5 text-emerald-400 text-sm mb-8">
             <Award className="w-4 h-4" />
-            Tiered Partner Program — up to 25% recurring
+            {tiers.length > 0 ? `Tiered ${programName} — up to ${maxRate} recurring` : programName}
           </div>
           <h1 className="text-5xl font-bold mb-6 leading-tight">
             Earn Recurring Commission<br />
             <span className="text-emerald-400">for Every Merchant You Refer</span>
           </h1>
           <p className="text-xl text-gray-400 mb-10 leading-relaxed">
-            Join the UPE Partner Program and earn 15–25% recurring commission
+            Join the {programName} and earn {heroRateRange} recurring commission
             on every merchant you refer — for the lifetime of their account.
             The more you refer, the more you earn.
           </p>
@@ -116,7 +151,7 @@ export default function JoinPage() {
       <section className="border-y border-white/5 bg-white/2 px-6 py-8">
         <div className="max-w-4xl mx-auto grid grid-cols-3 gap-8 text-center">
           {[
-            { value: 'Up to 25%', label: 'Recurring commission' },
+            { value: maxRate ? `Up to ${maxRate}` : 'Competitive', label: 'Recurring commission' },
             { value: '90 days', label: 'Attribution window' },
             { value: 'Monthly', label: 'Payout on the 15th' },
           ].map((s) => (
@@ -134,38 +169,58 @@ export default function JoinPage() {
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold mb-4">Commission Tiers</h2>
             <p className="text-gray-400 text-lg">
-              Start at 15% and automatically unlock higher rates as you grow your partner book.
-              No applications, no negotiations — promotions happen automatically.
+              {tiers.length > 0
+                ? 'Automatically unlock higher rates as you grow your partner book. No applications, no negotiations — promotions happen automatically.'
+                : 'Contact us to learn about our commission structure.'}
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {TIERS.map((tier) => (
-              <div
-                key={tier.name}
-                className={`relative rounded-2xl border ${tier.border} bg-white/3 p-8 ${tier.highlight ? 'ring-2 ring-emerald-500/40' : ''}`}
-              >
-                {tier.highlight && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
-                    Most Popular
+          {tiers.length > 0 ? (
+            <div className={`grid grid-cols-1 gap-6 ${tiers.length === 2 ? 'md:grid-cols-2' : tiers.length >= 3 ? 'md:grid-cols-3' : ''}`}>
+              {tiers.map((tier, i) => {
+                const style = TIER_STYLES[i % TIER_STYLES.length];
+                const ratePercent = `${Math.round(tier.commissionRate * 100)}%`;
+                const thresholdLabel = tier.tierThreshold ? `${tier.tierThreshold} merchants` : 'Start here';
+                const merchantsLabel = tier.tierThreshold
+                  ? (i + 1 < tiers.length && tiers[i + 1].tierThreshold
+                    ? `${tier.tierThreshold}–${tiers[i + 1].tierThreshold! - 1} active merchants`
+                    : `${tier.tierThreshold}+ active merchants`)
+                  : `1–${tiers[1]?.tierThreshold ? tiers[1].tierThreshold - 1 : '∞'} active merchants`;
+
+                return (
+                  <div
+                    key={tier.id}
+                    className={`relative rounded-2xl border ${style.border} bg-white/3 p-8 ${style.highlight ? 'ring-2 ring-emerald-500/40' : ''}`}
+                  >
+                    {style.highlight && (
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
+                        Most Popular
+                      </div>
+                    )}
+                    <div className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${style.badge} mb-6`}>
+                      {tier.name}
+                    </div>
+                    <div className={`text-5xl font-black bg-gradient-to-r ${style.color} bg-clip-text text-transparent mb-2`}>
+                      {ratePercent}
+                    </div>
+                    <div className="text-gray-400 text-sm mb-4">recurring commission</div>
+                    <div className="border-t border-white/5 pt-4 space-y-2">
+                      <div className="text-sm text-gray-300">{merchantsLabel}</div>
+                      <div className="text-xs text-gray-500">Unlocks at: {thresholdLabel}</div>
+                    </div>
                   </div>
-                )}
-                <div className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${tier.badge} mb-6`}>
-                  {tier.name}
-                </div>
-                <div className={`text-5xl font-black bg-gradient-to-r ${tier.color} bg-clip-text text-transparent mb-2`}>
-                  {tier.rate}
-                </div>
-                <div className="text-gray-400 text-sm mb-4">recurring commission</div>
-                <div className="border-t border-white/5 pt-4 space-y-2">
-                  <div className="text-sm text-gray-300">{tier.merchants}</div>
-                  <div className="text-xs text-gray-500">Unlocks at: {tier.threshold}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <p className="text-center text-gray-500 text-sm mt-8">
-            Tier upgrades are automatic — when your 10th active merchant activates, you move to Silver immediately.
-          </p>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center text-gray-500 py-12">
+              Commission tier information is coming soon. <Link href="/register" className="text-emerald-400 underline">Register now</Link> to get started.
+            </div>
+          )}
+          {tiers.length > 1 && (
+            <p className="text-center text-gray-500 text-sm mt-8">
+              Tier upgrades are automatic — hit the threshold and your rate increases immediately.
+            </p>
+          )}
         </div>
       </section>
 
@@ -248,7 +303,7 @@ export default function JoinPage() {
             </div>
             Partner Portal
           </div>
-          <div>© {new Date().getFullYear()} UPEmaster. All rights reserved.</div>
+          <div>© {new Date().getFullYear()} {companyName}. All rights reserved.</div>
         </div>
       </footer>
     </main>

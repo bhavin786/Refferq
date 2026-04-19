@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
 /**
  * GET /api/public/tracking-snippet
@@ -13,12 +14,31 @@ import { NextResponse } from 'next/server';
  * No auth required — public endpoint, script contains no secrets.
  */
 export async function GET() {
+  // Resolve default referral code: ProgramSettings.defaultPartnerCode > env var > empty string
+  let defaultRef = process.env.DEFAULT_PARTNER_CODE || '';
+  try {
+    const settings = await prisma.programSettings.findFirst({
+      select: { defaultPartnerCode: true },
+    });
+    if (settings?.defaultPartnerCode) {
+      defaultRef = settings.defaultPartnerCode;
+    }
+  } catch (_) {
+    // Non-fatal — fall back to env var / empty string
+  }
+
+  // PORTAL_URL and TRACKING_API_KEY must be set in the deployment environment.
+  // PORTAL_URL: public base URL of this Refferq instance (e.g. https://app.example.com)
+  // TRACKING_API_KEY: public (non-secret) API key embedded in the client-side snippet
+  const portalUrl = process.env.PORTAL_URL || process.env.NEXT_PUBLIC_APP_URL || '';
+  const trackingApiKey = process.env.TRACKING_API_KEY || '';
+
   const snippet = `
 (function(w) {
   'use strict';
-  var PORTAL = 'https://app.refferq.com';
-  var PUBLIC_KEY = 'pk_e8cc2dab4dde6d28b5bec0ddae843d13130bbd5104d56e166bf638a78b6fbfbc';
-  var DEFAULT_REF = 'UPEADM-8B93';
+  var PORTAL = '${portalUrl}';
+  var PUBLIC_KEY = '${trackingApiKey}';
+  var DEFAULT_REF = '${defaultRef}';
 
   function getCookie(name) {
     try {
