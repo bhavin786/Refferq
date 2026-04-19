@@ -77,13 +77,16 @@ export async function POST(request: NextRequest) {
         }
 
         // ─── Find Related Conversions ──────────────────────────────
-        // Strategy: find conversions by customer email in event_metadata
+        // Strategy: look up Referral by leadEmail → Conversion → Commission.
+        // customerEmail is stored in Referral.leadEmail (NOT in Conversion.eventMetadata).
         const conversions = await prisma.conversion.findMany({
             where: {
-                eventMetadata: {
-                    path: ['customerEmail'],
-                    equals: customer_email,
+                referral: {
+                    leadEmail: customer_email,
                 },
+                ...(referral_code
+                    ? { affiliate: { referralCode: referral_code } }
+                    : {}),
             },
             include: {
                 commissions: true,
@@ -101,10 +104,34 @@ export async function POST(request: NextRequest) {
             });
         }
 
+        // ─── Also cancel conversions with no commissions yet ───────
+        // Commission creation may be async (background job). Cancel the conversion
+        // itself so no commission is created later.
+        for (const conv of conversions) {
+            if (conv.status !== 'REJECTED') {
+                await prisma.conversion.update({
+                    where: { id: conv.id },
+                    data: { status: 'REJECTED' },
+                }).catch(() => null);
+            }
+        }
+
         // ─── Process Refund for Each Commission ────────────────────
         let reversedCount = 0;
         let totalReversedCents = 0;
         const results: Array<{ commissionId: string; action: string; amountCents: number }> = [];
+
+        // Count conversions with no commissions (conversion cancelled, future commission prevented)
+        const noCommissionCount = conversions.filter(c => c.commissions.length === 0).length;
+        if (noCommissionCount > 0) {
+            console.log(`Refund webhook: ${noCommissionCount} conversion(s) cancelled (no commissions yet)`);
+            // Report these as reversed so the caller knows action was taken
+            reversedCount += noCommissionCount;
+            results.push(...conversions
+                .filter(c => c.commissions.length === 0)
+                .map(c => ({ commissionId: `conv-${c.id}`, action: 'conversion_cancelled', amountCents: c.amountCents }))
+            );
+        }
 
         for (const conversion of conversions) {
             for (const commission of conversion.commissions) {
@@ -170,12 +197,6 @@ export async function POST(request: NextRequest) {
                 reversedCount++;
                 totalReversedCents += commission.amountCents;
             }
-
-            // Update conversion status
-            await prisma.conversion.update({
-                where: { id: conversion.id },
-                data: { status: 'REJECTED' },
-            });
         }
 
         // ─── Audit Log ─────────────────────────────────────────────
