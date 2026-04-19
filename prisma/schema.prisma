@@ -8,22 +8,37 @@ datasource db {
 }
 
 model User {
-  id             String       @id @default(cuid())
-  email          String       @unique
+  id             String                @id @default(cuid())
+  email          String                @unique
   name           String
   password       String
-  role           Role         @default(AFFILIATE)
-  status         UserStatus   @default(PENDING)
-  lastLogin      DateTime?    @map("last_login")
-  createdAt      DateTime     @default(now()) @map("created_at")
-  updatedAt      DateTime     @updatedAt @map("updated_at")
-  profilePicture String?      @map("profile_picture")
+  role           Role                  @default(AFFILIATE)
+  status         UserStatus            @default(PENDING)
+  lastLogin      DateTime?             @map("last_login")
+  createdAt      DateTime              @default(now()) @map("created_at")
+  updatedAt      DateTime              @updatedAt @map("updated_at")
+  profilePicture String?               @map("profile_picture")
   affiliate      Affiliate?
   auditLogs      AuditLog[]
   commissions    Commission[]
   payouts        Payout[]
+  resetTokens    PasswordResetToken[]
 
   @@map("users")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([token])
+  @@index([userId])
+  @@map("password_reset_tokens")
 }
 
 model Affiliate {
@@ -90,10 +105,12 @@ model Conversion {
   amountCents   Int              @map("amount_cents")
   currency      String           @default("USD")
   status        ConversionStatus @default(PENDING)
-  eventMetadata Json             @default("{}") @map("event_metadata")
-  createdAt     DateTime         @default(now()) @map("created_at")
-  updatedAt     DateTime         @updatedAt @map("updated_at")
-  commissions   Commission[]
+  eventMetadata   Json             @default("{}") @map("event_metadata")
+  idempotencyKey  String?          @unique @map("idempotency_key")
+  sourceTag       String?          @default("default") @map("source_tag")
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  commissions     Commission[]
   affiliate     Affiliate        @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
   referral      Referral?        @relation(fields: [referralId], references: [id])
 
@@ -185,6 +202,9 @@ model OTP {
   @@map("otps")
 }
 
+// defaultPartnerCode: referral code used when no affiliate attribution exists.
+// Set to the super-admin's code so all organic signups have a tracking anchor.
+// The admin role is exempt from earning commission on these (see tier-escalation).
 model ProgramSettings {
   id                        String   @id @default(cuid())
   programId                 String   @unique @map("program_id")
@@ -194,6 +214,8 @@ model ProgramSettings {
   currency                  String   @default("INR")
   blockedCountries          Json     @default("[]") @map("blocked_countries")
   portalSubdomain           String   @map("portal_subdomain")
+  defaultPartnerCode        String?  @map("default_partner_code") // fallback referral code for organic signups
+  sourceTag                 String   @default("default") @map("source_tag") // identifies this program instance (e.g. "hotel-main", "saas-app")
   termsOfService            String?  @map("terms_of_service")
   minimumPayoutThreshold    Int      @default(0) @map("minimum_payout_threshold")
   payoutTerm                String   @default("NET-15") @map("payout_term")
@@ -226,15 +248,16 @@ model ProgramSettings {
 }
 
 model PartnerGroup {
-  id             String      @id @default(cuid())
-  name           String
-  description    String?
-  commissionRate Float       @map("commission_rate")
-  signupUrl      String?     @map("signup_url")
-  isDefault      Boolean     @default(false) @map("is_default")
-  createdAt      DateTime    @default(now()) @map("created_at")
-  updatedAt      DateTime    @updatedAt @map("updated_at")
-  affiliates     Affiliate[]
+  id               String      @id @default(cuid())
+  name             String
+  description      String?
+  commissionRate   Float       @map("commission_rate")
+  tierThreshold    Int?        @map("tier_threshold") // min active merchants to auto-enter this tier
+  signupUrl        String?     @map("signup_url")
+  isDefault        Boolean     @default(false) @map("is_default")
+  createdAt        DateTime    @default(now()) @map("created_at")
+  updatedAt        DateTime    @updatedAt @map("updated_at")
+  affiliates       Affiliate[]
 
   @@map("partner_groups")
 }
@@ -435,6 +458,7 @@ enum EmailTemplateType {
   COMMISSION_APPROVED
   PAYOUT_GENERATED
   REFERRAL_CONVERTED
+  PASSWORD_RESET
 }
 
 enum EmailStatus {
